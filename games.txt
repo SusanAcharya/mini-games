@@ -361,3 +361,47 @@ Victory Screen:
 Gangster silhouette with "You Wiped Them Out!" neon graffiti text.
 
 
+7. Dice Shootout
+
+Type: PvE (Bot opponent)
+Core Loop:
+
+Player & bot start with 50 HP each.
+
+On turn: roll 1 six-sided die.
+
+Roll value = damage dealt to opponent.
+
+First to reduce opponent to 0 HP wins.
+Points: Win = +25 points.
+Bot Logic: Always roll, no extra decisions (pure RNG).
+Degen Mode: Critical Chance — rolling a 6 deals ×2 damage.
+
+
+8. Degen Sweeper
+
+Type: Single Player (PvE)
+Core Loop:
+
+4×4 grid (16 tiles).
+
+4 hidden bombs.
+
+Reveal safe tiles to earn points.
+
+Reveal a bomb = instant loss.
+
+Clear all safe tiles = +500 points jackpot.
+Points: +10 per safe tile revealed.
+
+
+8. Game 7 – High Roller (Simplified Baccarat)
+"High Roller" is an ultra-low-complexity card game of pure chance, making it exceptionally easy to implement. It’s a betting game where players have no influence over the cards drawn and their only action is to place a wager. This model aligns with the "degen appeal" of your platform, providing a game that is all about risk and luck.  
+How the Game Works: The game is a simplified version of Baccarat, or punto banco, a classic game of chance where the outcome is largely left to luck. The game revolves around two hands: a "Player" hand and a "Banker" hand. The goal of the game is to bet on which hand will have a total value closer to 15(or any number).  A=1 , K=13
+Placing Bets: After the 3 cards are dealt, the player (and their opponent/bot) place their bets. They can choose to bet on one of three outcomes:
+Player wins.
+Banker wins.
+It's a Tie.
+Card Deal & Outcome: Once bets are placed, the totals are compared. The hand with the total closest to 15 wins. The game is entirely automated after the bets are placed, which simplifies development and ensures a non-active experience.
+Role of Players and the Bot:
+The Player: The human player's role is to place their bet. There are no other decisions to be made. 

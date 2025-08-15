@@ -3,8 +3,11 @@ import { DiceRisk } from '../titles/dice-risk/DiceRisk'
 import { HideoutHunt } from '../titles/hideout-hunt/HideoutHunt'
 import { Minesweeper } from '../titles/minesweeper/Minesweeper'
 import { LastPokerHand } from '../titles/last-poker-hand/LastPokerHand'
+import { DiceShootout } from '../titles/dice-shootout/DiceShootout'
+import { DegenSweeper } from '../titles/degen-sweeper/DegenSweeper'
+import { HighRoller } from '../titles/high-roller/HighRoller'
 
-type GameKey = 'dice-risk' | 'minesweeper' | 'bounty-hunter' | 'dog-race' | 'last-poker-hand' | 'hideout-hunt'
+type GameKey = 'dice-risk' | 'minesweeper' | 'bounty-hunter' | 'dog-race' | 'last-poker-hand' | 'hideout-hunt' | 'dice-shootout' | 'degen-sweeper' | 'high-roller'
 
 const games: Array<{ key: GameKey; title: string; ready: boolean; description: string }> = [
   { key: 'dice-risk', title: 'Dice Risk', ready: true, description: 'Roll, hold, or risk re-rolling to beat the bot.' },
@@ -13,6 +16,9 @@ const games: Array<{ key: GameKey; title: string; ready: boolean; description: s
   { key: 'dog-race', title: 'Dog Race', ready: false, description: 'Bet on the winning dog.' },
   { key: 'last-poker-hand', title: 'Last Poker Hand', ready: true, description: 'One swap round to build the best hand.' },
   { key: 'hideout-hunt', title: 'Hideout Hunt', ready: true, description: 'Find and destroy enemy hideouts.' },
+  { key: 'dice-shootout', title: 'Dice Shootout', ready: true, description: 'Deal damage with die rolls; 6 is crit.' },
+  { key: 'degen-sweeper', title: 'Degen Sweeper', ready: true, description: 'Clear 4x4 without bombs for jackpot.' },
+  { key: 'high-roller', title: 'High Roller', ready: true, description: 'Bet on Player/Banker/Tie; closest to 15 wins.' },
 ]
 
 export function App(): JSX.Element {
@@ -56,6 +62,9 @@ export function App(): JSX.Element {
           {active === 'hideout-hunt' && <HideoutHunt />}
           {active === 'minesweeper' && <Minesweeper />}
           {active === 'last-poker-hand' && <LastPokerHand />}
+          {active === 'dice-shootout' && <DiceShootout />}
+          {active === 'degen-sweeper' && <DegenSweeper />}
+          {active === 'high-roller' && <HighRoller />}
           {active !== 'dice-risk' && active !== 'hideout-hunt' && (
             <div style={{ color: '#9aa' }}>Select Dice Risk to start. Others are coming soon.</div>
           )}
