@@ -129,6 +129,10 @@ export function DiceRisk(): JSX.Element {
     trigger(); roll()
     setRound(prev => {
       const r = rollTwoDice()
+      if (r.sum === 12) {
+        win()
+        return { ...prev, human: { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'human' }
+      }
       const humanNext: TurnState = { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }
       const botDone = isPlayerDone(prev.bot)
       return { ...prev, human: humanNext, currentTurn: botDone ? 'human' : 'bot' }
@@ -164,6 +168,9 @@ export function DiceRisk(): JSX.Element {
           botNext = { ...prev.bot, held: true, turnIndex: Math.max(prev.bot.turnIndex, 1) }
         } else {
           const r = rollTwoDice()
+          if (r.sum === 12) {
+            return { ...prev, bot: { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'bot' }
+          }
           botNext = { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }
         }
 

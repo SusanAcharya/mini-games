@@ -405,3 +405,63 @@ It's a Tie.
 Card Deal & Outcome: Once bets are placed, the totals are compared. The hand with the total closest to 15 wins. The game is entirely automated after the bets are placed, which simplifies development and ensures a non-active experience.
 Role of Players and the Bot:
 The Player: The human player's role is to place their bet. There are no other decisions to be made. 
+
+9. Game 8 - Gang War 21 ♠️💣
+
+Gangster twist on Blackjack
+
+Gameplay:
+
+Player vs Bot. Turn-based.
+
+Each is dealt 2 cards; goal is to get as close to 21 as possible without going over.
+
+Player chooses “Hit” (draw) or “Stand” (stop).
+
+Bot logic: draws until reaching 17+ or busting.
+
+You can see the opponent's first card. rest are hidden until it's time for reveal.
+
+The winner is the one who is lesser and closet to 21. 
+
+A=1 ... K=13
+
+
+
+10. Game 9 - Shoot the Moon (Simplified Craps): 
+
+The game is a turn-based dice rolling competition between a player and a bot. The objective for the "shooter" is to roll specific combinations to win the round. The opponent wins if the shooter fails to meet their objective. The roles of the shooter and the opponent would alternate in a PvP setting, making it a fair and balanced competition over multiple rounds.
+
+Game Flow:
+
+Come Out Roll:
+
+The shooter rolls two dice.
+
+Instant Win: Roll of 7 or 11.
+
+Instant Loss: Roll of 2, 3, or 12.
+
+Set the Point: Roll of 4, 5, 6, 8, 9, or 10 transitions to the Point Phase.
+
+Point Phase (if applicable):
+
+Shooter continues rolling.
+
+Shooter Wins: Rolling the same point again.
+
+Shooter Loses: Rolling a 7.
+
+
+Bot Logic:
+
+The bot acts as a passive opponent.
+
+It does not make decisions or roll dice.
+
+It simply wins if the shooter loses, and loses if the shooter wins.
+
+No AI or strategy is required—outcomes are determined entirely by the shooter's rolls.
+
+UI: add a "?" section which opens a popup , which explains the game rules and the dice rolls and game flow.
+

@@ -57,20 +57,28 @@ export function DegenSweeper(): JSX.Element {
   const [tiles, setTiles] = useState<Tile[]>(() => gen())
   const [points, setPoints] = useState(0)
   const [status, setStatus] = useState<'playing' | 'lost' | 'won'>('playing')
+  const [undoLeft, setUndoLeft] = useState(1)
+  const [pendingBombKey, setPendingBombKey] = useState<string | null>(null)
   const { reveal, boom, win } = useAudio()
 
   const safeLeft = useMemo(() => tiles.filter(t=>!t.bomb && !t.revealed).length, [tiles])
 
-  const reset = () => { setTiles(gen()); setPoints(0); setStatus('playing') }
+  const reset = () => { setTiles(gen()); setPoints(0); setStatus('playing'); setUndoLeft(1); setPendingBombKey(null) }
 
   const onClick = (tile: Tile) => {
     if (status !== 'playing') return
+    if (pendingBombKey) return
     if (tile.revealed) return
     setTiles(prev => prev.map(t => (t.pos.row===tile.pos.row && t.pos.col===tile.pos.col ? { ...t, revealed: true } : t)))
     if (tile.bomb) {
-      setStatus('lost')
-      setPoints(0)
       boom()
+      const k = keyOf(tile.pos)
+      if (undoLeft > 0) {
+        setPendingBombKey(k)
+      } else {
+        setStatus('lost')
+        setPoints(0)
+      }
       return
     }
     reveal()
@@ -84,6 +92,20 @@ export function DegenSweeper(): JSX.Element {
     }, 0)
   }
 
+  const undoBomb = () => {
+    if (!pendingBombKey || undoLeft <= 0) return
+    setTiles(prev => prev.map(t => (keyOf(t.pos)===pendingBombKey ? { ...t, revealed: false } : t)))
+    setPendingBombKey(null)
+    setUndoLeft(n => n - 1)
+  }
+
+  const acceptLoss = () => {
+    if (!pendingBombKey) return
+    setPendingBombKey(null)
+    setStatus('lost')
+    setPoints(0)
+  }
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }}>
       <div>
@@ -92,6 +114,13 @@ export function DegenSweeper(): JSX.Element {
             <div>Points: <strong>{points}</strong></div>
             <div>Status: {status === 'playing' ? 'Playing' : status === 'won' ? 'Cleared! +500' : 'Boom! 0 points'}</div>
             <div>Safe tiles left: {safeLeft}</div>
+            <div>Undo available: {undoLeft}</div>
+            {pendingBombKey && status==='playing' && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={undoBomb} disabled={undoLeft<=0} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: undoLeft>0 ? 'transparent' : '#1a1f33', color: '#eaeaf0' }}>Undo Bomb</button>
+                <button onClick={acceptLoss} style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>Accept Loss</button>
+              </div>
+            )}
             <button onClick={reset} style={{ marginTop: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>New Round</button>
           </div>
         </Panel>

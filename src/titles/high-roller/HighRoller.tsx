@@ -49,7 +49,9 @@ export function HighRoller(): JSX.Element {
   const [game, setGame] = useState<GameState>(() => {
     const deck = shuffle(buildDeck())
     const player = deck.slice(0,3)
-    return { phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck, player, banker: [], winner: null, points: 0 }
+    const banker = [deck[3]]
+    const rest = deck.slice(4)
+    return { phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck: rest, player, banker, winner: null, points: 0 }
   })
   const { deal, flip, win, lose } = useAudio()
 
@@ -62,9 +64,12 @@ export function HighRoller(): JSX.Element {
   const doReveal = () => {
     if (!canReveal) return
     setGame(prev => ({ ...prev, phase: 'reveal' }))
-    const b = game.deck.slice(3,6)
+    // Add remaining 2 banker cards from deck
+    const add = game.deck.slice(0, 2)
+    const b = [...game.banker, ...add]
+    const rest = game.deck.slice(2)
     deal()
-    setTimeout(() => { setGame(prev => ({ ...prev, banker: b })) ; flip() }, 120)
+    setTimeout(() => { setGame(prev => ({ ...prev, banker: b, deck: rest })) ; flip() }, 120)
     setTimeout(() => finalize(game.player, b), 500)
   }
 
@@ -85,7 +90,9 @@ export function HighRoller(): JSX.Element {
   const reset = () => {
     const deck = shuffle(buildDeck())
     const player = deck.slice(0,3)
-    setGame({ phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck, player, banker: [], winner: null, points: 0 })
+    const banker = [deck[3]]
+    const rest = deck.slice(4)
+    setGame({ phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck: rest, player, banker, winner: null, points: 0 })
   }
 
   const status = useMemo(() => {
@@ -127,7 +134,7 @@ export function HighRoller(): JSX.Element {
           <div style={{ display: 'grid', gap: 16 }}>
             <div>
               <div style={{ marginBottom: 6, color: '#aab' }}>Banker</div>
-              <CardRow cards={game.banker} hidden={game.phase==='betting'} />
+              <CardRow cards={game.banker} hidden={false} firstOnlyHidden={game.phase==='betting'} />
             </div>
             <div>
               <div style={{ marginBottom: 6, color: '#aab' }}>Player</div>
@@ -157,12 +164,12 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   )
 }
 
-function CardRow({ cards, hidden }: { cards: Card[]; hidden?: boolean }) {
+function CardRow({ cards, hidden, firstOnlyHidden }: { cards: Card[]; hidden?: boolean; firstOnlyHidden?: boolean }) {
   return (
     <div style={{ display: 'flex', gap: 10 }}>
       {cards.length === 0 && <div style={{ color: '#6a6d85' }}>—</div>}
       {cards.map((c, idx) => (
-        <PlayingCard key={c.id + idx} card={c} faceDown={hidden && idx > 0} />
+        <PlayingCard key={c.id + idx} card={c} faceDown={hidden ? (idx > 0) : (firstOnlyHidden ? idx > 0 : false)} />
       ))}
     </div>
   )

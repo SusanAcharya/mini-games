@@ -101,6 +101,10 @@ export function DiceRisk() {
         roll();
         setRound(prev => {
             const r = rollTwoDice();
+            if (r.sum === 12) {
+                win();
+                return { ...prev, human: { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'human' };
+            }
             const humanNext = { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] };
             const botDone = isPlayerDone(prev.bot);
             return { ...prev, human: humanNext, currentTurn: botDone ? 'human' : 'bot' };
@@ -139,6 +143,9 @@ export function DiceRisk() {
                 }
                 else {
                     const r = rollTwoDice();
+                    if (r.sum === 12) {
+                        return { ...prev, bot: { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'bot' };
+                    }
                     botNext = { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] };
                 }
                 const humanHeld = prev.human.held;

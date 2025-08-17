@@ -34,7 +34,9 @@ export function HighRoller() {
     const [game, setGame] = useState(() => {
         const deck = shuffle(buildDeck());
         const player = deck.slice(0, 3);
-        return { phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck, player, banker: [], winner: null, points: 0 };
+        const banker = [deck[3]];
+        const rest = deck.slice(4);
+        return { phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck: rest, player, banker, winner: null, points: 0 };
     });
     const { deal, flip, win, lose } = useAudio();
     const canReveal = useMemo(() => game.phase === 'betting' && game.bet !== null, [game]);
@@ -47,9 +49,12 @@ export function HighRoller() {
         if (!canReveal)
             return;
         setGame(prev => ({ ...prev, phase: 'reveal' }));
-        const b = game.deck.slice(3, 6);
+        // Add remaining 2 banker cards from deck
+        const add = game.deck.slice(0, 2);
+        const b = [...game.banker, ...add];
+        const rest = game.deck.slice(2);
         deal();
-        setTimeout(() => { setGame(prev => ({ ...prev, banker: b })); flip(); }, 120);
+        setTimeout(() => { setGame(prev => ({ ...prev, banker: b, deck: rest })); flip(); }, 120);
         setTimeout(() => finalize(game.player, b), 500);
     };
     const finalize = (p, b) => {
@@ -71,7 +76,9 @@ export function HighRoller() {
     const reset = () => {
         const deck = shuffle(buildDeck());
         const player = deck.slice(0, 3);
-        setGame({ phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck, player, banker: [], winner: null, points: 0 });
+        const banker = [deck[3]];
+        const rest = deck.slice(4);
+        setGame({ phase: 'betting', bet: null, blindBet: false, playerRevealed: false, deck: rest, player, banker, winner: null, points: 0 });
     };
     const status = useMemo(() => {
         if (game.phase === 'betting')
@@ -87,7 +94,7 @@ export function HighRoller() {
         }
         return '';
     }, [game]);
-    return (_jsxs("div", { style: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20 }, children: [_jsx("div", { children: _jsx(Panel, { title: "High Roller", children: _jsxs("div", { style: { display: 'grid', gap: 8 }, children: [_jsx("div", { children: status }), game.phase === 'betting' && (_jsxs("div", { style: { display: 'flex', gap: 8, marginTop: 8 }, children: [_jsx("button", { onClick: () => placeBet('player'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'player' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Player" }), _jsx("button", { onClick: () => placeBet('banker'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'banker' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Banker" }), _jsx("button", { onClick: () => placeBet('tie'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'tie' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Tie" })] })), _jsxs("div", { style: { display: 'flex', gap: 8, marginTop: 8 }, children: [_jsx("button", { onClick: revealMyHand, disabled: game.playerRevealed || game.phase !== 'betting', style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.playerRevealed ? '#1a1f33' : 'transparent', color: '#eaeaf0' }, children: "Reveal My Hand" }), _jsx("button", { onClick: doReveal, disabled: !canReveal, style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: canReveal ? 'transparent' : '#1a1f33', color: '#eaeaf0' }, children: "Reveal Outcome" }), _jsx("button", { onClick: reset, style: { padding: '8px 10px', borderRadius: 10, border: '1px dashed #2d3550', background: 'transparent', color: '#aab' }, children: "New Round" })] })] }) }) }), _jsx("div", { children: _jsx(Panel, { title: "Table", children: _jsxs("div", { style: { display: 'grid', gap: 16 }, children: [_jsxs("div", { children: [_jsx("div", { style: { marginBottom: 6, color: '#aab' }, children: "Banker" }), _jsx(CardRow, { cards: game.banker, hidden: game.phase === 'betting' })] }), _jsxs("div", { children: [_jsx("div", { style: { marginBottom: 6, color: '#aab' }, children: "Player" }), _jsx(CardRow, { cards: game.player, hidden: !game.playerRevealed && game.phase === 'betting' })] })] }) }) })] }));
+    return (_jsxs("div", { style: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20 }, children: [_jsx("div", { children: _jsx(Panel, { title: "High Roller", children: _jsxs("div", { style: { display: 'grid', gap: 8 }, children: [_jsx("div", { children: status }), game.phase === 'betting' && (_jsxs("div", { style: { display: 'flex', gap: 8, marginTop: 8 }, children: [_jsx("button", { onClick: () => placeBet('player'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'player' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Player" }), _jsx("button", { onClick: () => placeBet('banker'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'banker' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Banker" }), _jsx("button", { onClick: () => placeBet('tie'), style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.bet === 'tie' ? '#1b1f2e' : 'transparent', color: '#eaeaf0' }, children: "Bet Tie" })] })), _jsxs("div", { style: { display: 'flex', gap: 8, marginTop: 8 }, children: [_jsx("button", { onClick: revealMyHand, disabled: game.playerRevealed || game.phase !== 'betting', style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: game.playerRevealed ? '#1a1f33' : 'transparent', color: '#eaeaf0' }, children: "Reveal My Hand" }), _jsx("button", { onClick: doReveal, disabled: !canReveal, style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: canReveal ? 'transparent' : '#1a1f33', color: '#eaeaf0' }, children: "Reveal Outcome" }), _jsx("button", { onClick: reset, style: { padding: '8px 10px', borderRadius: 10, border: '1px dashed #2d3550', background: 'transparent', color: '#aab' }, children: "New Round" })] })] }) }) }), _jsx("div", { children: _jsx(Panel, { title: "Table", children: _jsxs("div", { style: { display: 'grid', gap: 16 }, children: [_jsxs("div", { children: [_jsx("div", { style: { marginBottom: 6, color: '#aab' }, children: "Banker" }), _jsx(CardRow, { cards: game.banker, hidden: false, firstOnlyHidden: game.phase === 'betting' })] }), _jsxs("div", { children: [_jsx("div", { style: { marginBottom: 6, color: '#aab' }, children: "Player" }), _jsx(CardRow, { cards: game.player, hidden: !game.playerRevealed && game.phase === 'betting' })] })] }) }) })] }));
 }
 function Panel({ title, children }) {
     return (_jsxs("div", { style: {
@@ -98,8 +105,8 @@ function Panel({ title, children }) {
             boxShadow: '0 12px 24px rgba(0,0,0,0.25) inset, 0 6px 24px rgba(2,10,30,0.35)'
         }, children: [_jsx("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }, children: _jsx("div", { style: { fontWeight: 700, letterSpacing: 0.2 }, children: title }) }), children] }));
 }
-function CardRow({ cards, hidden }) {
-    return (_jsxs("div", { style: { display: 'flex', gap: 10 }, children: [cards.length === 0 && _jsx("div", { style: { color: '#6a6d85' }, children: "\u2014" }), cards.map((c, idx) => (_jsx(PlayingCard, { card: c, faceDown: hidden && idx > 0 }, c.id + idx)))] }));
+function CardRow({ cards, hidden, firstOnlyHidden }) {
+    return (_jsxs("div", { style: { display: 'flex', gap: 10 }, children: [cards.length === 0 && _jsx("div", { style: { color: '#6a6d85' }, children: "\u2014" }), cards.map((c, idx) => (_jsx(PlayingCard, { card: c, faceDown: hidden ? (idx > 0) : (firstOnlyHidden ? idx > 0 : false) }, c.id + idx)))] }));
 }
 function PlayingCard({ card, faceDown }) {
     const ref = useRef(null);

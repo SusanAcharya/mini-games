@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useMemo, useRef, useState } from 'react';
 const SIZE = 8;
 const BOMBS = 12;
-const STAR_RATIO = 0.5; // proportion of non-bomb tiles that are stars; rest are cash
+// Ensure equal number of multipliers (stars) and bombs; rest become cash
 function keyOf(c) { return `${c.row},${c.col}`; }
 function inBounds(c) { return c.row >= 0 && c.row < SIZE && c.col >= 0 && c.col < SIZE; }
 function pickUniquePositions(count, forbidden = new Set()) {
@@ -35,9 +35,9 @@ function generateBoard() {
         remaining[i] = remaining[j];
         remaining[j] = tmp;
     }
-    const starCount = Math.floor(remaining.length * STAR_RATIO);
-    const stars = new Set(remaining.slice(0, starCount));
-    const cash = new Set(remaining.slice(starCount));
+    const starCount = BOMBS; // equal to number of bombs
+    const stars = new Set(remaining.slice(0, Math.min(starCount, remaining.length)));
+    const cash = new Set(remaining.filter(k => !stars.has(k)));
     const tiles = [];
     for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {

@@ -250,6 +250,8 @@ type GameState = {
   points: number
   blindArmed: boolean
   explanation: string | null
+  showHelp: boolean
+  showRanks: boolean
 }
 
 function dealInitial(): GameState {
@@ -267,6 +269,8 @@ function dealInitial(): GameState {
     points: 0,
     blindArmed: false,
     explanation: null,
+    showHelp: false,
+    showRanks: false,
   }
 }
 
@@ -512,7 +516,12 @@ export function LastPokerHand(): JSX.Element {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20 }}>
       <div>
-        <Panel title="Last Poker Hand">
+        <Panel title="Last Poker Hand" titleRight={(
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setGame(p => ({ ...p, showHelp: true }))} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>?</button>
+            <button onClick={() => setGame(p => ({ ...p, showRanks: true }))} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>i</button>
+          </div>
+        )}>
           <div style={{ display: 'grid', gap: 8 }}>
             <div>Status: {status}</div>
             {game.phase === 'finished' && (
@@ -548,11 +557,17 @@ export function LastPokerHand(): JSX.Element {
           </div>
         </Panel>
       </div>
+      {game.showHelp && (
+        <HelpModal onClose={() => setGame(p => ({ ...p, showHelp: false }))} />
+      )}
+      {game.showRanks && (
+        <RanksModal onClose={() => setGame(p => ({ ...p, showRanks: false }))} />
+      )}
     </div>
   )
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children, titleRight }: { title: string; children: React.ReactNode; titleRight?: React.ReactNode }) {
   return (
     <div style={{
       background: 'linear-gradient(180deg, #121525 0%, #0e1017 100%)',
@@ -563,6 +578,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div style={{ fontWeight: 700, letterSpacing: 0.2 }}>{title}</div>
+        {titleRight}
       </div>
       {children}
     </div>
@@ -642,6 +658,66 @@ function PlayingCard({ card, faceDown, selectable, selected, onToggle, isGolden 
       {faceDown && (
         <div style={{ display: 'grid', placeItems: 'center', color: '#aab' }}>★</div>
       )}
+    </div>
+  )
+}
+
+function HelpModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
+      <div style={{ width: 560, maxWidth: '92vw', background: '#0e1017', border: '1px solid #24283a', borderRadius: 12, padding: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 700 }}>How to Play — Last Poker Hand</div>
+          <button onClick={onClose} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>Close</button>
+        </div>
+        <div style={{ marginTop: 10, color: '#c7c9d9', fontSize: 14, lineHeight: 1.5 }}>
+          <p>Deal: You and the dealer receive 5 cards. Your cards are face-up; dealer keeps 4 hidden.</p>
+          <p>Swap: Select up to 3 of your cards and an equal number of community cards to swap 1:1. Or arm Blind Bonus (skip swap) for 2× points if you win.</p>
+          <p>Dealer: Dealer will swap up to 3 cards with the community to improve its hand (small chance of mistakes).</p>
+          <p>Reveal: Both hands are revealed. Points are awarded by hand rank (see ranking), +10 win bonus, -5 loss penalty, +50 if your golden card is in your best five. Blind Bonus doubles if you win without swapping.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RanksModal({ onClose }: { onClose: () => void }) {
+  const C = (r: Rank, s: Suit): Card => ({ rank: r, suit: s, id: `${r}${s}` })
+  const rows: Array<{ title: string; desc: string; hand: Card[] }> = [
+    { title: 'Royal Flush', desc: 'A, K, Q, J, 10 all in the same suit.', hand: [C('10','♥'), C('J','♥'), C('Q','♥'), C('K','♥'), C('A','♥')] },
+    { title: 'Straight Flush', desc: 'Five sequential cards in the same suit.', hand: [C('5','♣'), C('6','♣'), C('7','♣'), C('8','♣'), C('9','♣')] },
+    { title: 'Four of a Kind', desc: 'Four cards of the same rank.', hand: [C('9','♠'), C('9','♥'), C('9','♦'), C('9','♣'), C('2','♠')] },
+    { title: 'Full House', desc: 'Three of a kind plus a pair.', hand: [C('K','♠'), C('K','♥'), C('K','♦'), C('3','♣'), C('3','♦')] },
+    { title: 'Flush', desc: 'Any five cards of the same suit, not sequential.', hand: [C('A','♦'), C('J','♦'), C('9','♦'), C('6','♦'), C('3','♦')] },
+    { title: 'Straight', desc: 'Five sequential cards, any suits (A can be low).', hand: [C('A','♠'), C('2','♥'), C('3','♦'), C('4','♣'), C('5','♠')] },
+    { title: 'Three of a Kind', desc: 'Three cards of the same rank.', hand: [C('7','♠'), C('7','♥'), C('7','♦'), C('K','♣'), C('4','♠')] },
+    { title: 'Two Pair', desc: 'Two different pairs.', hand: [C('Q','♠'), C('Q','♥'), C('4','♦'), C('4','♣'), C('9','♠')] },
+    { title: 'One Pair', desc: 'One pair of equal rank.', hand: [C('J','♠'), C('J','♦'), C('K','♥'), C('8','♣'), C('5','♠')] },
+    { title: 'High Card', desc: 'No combination; highest card plays.', hand: [C('A','♣'), C('K','♦'), C('8','♥'), C('5','♦'), C('3','♣')] },
+  ]
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 50 }}>
+      <div style={{ width: 700, maxWidth: '95vw', maxHeight: '80vh', overflow: 'auto', background: '#0e1017', border: '1px solid #24283a', borderRadius: 12, padding: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 700 }}>Poker Hand Rankings</div>
+          <button onClick={onClose} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>Close</button>
+        </div>
+        <div style={{ marginTop: 12, display: 'grid', gap: 14 }}>
+          {rows.map((row, idx) => (
+            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', alignItems: 'center', gap: 12 }}>
+              <div>
+                <div style={{ color: '#c7c9d9', fontWeight: 700 }}>{row.title}</div>
+                <div style={{ color: '#aab', fontSize: 13 }}>{row.desc}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {row.hand.map((card, i) => (
+                  <PlayingCard key={card.id + i} card={card} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

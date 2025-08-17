@@ -54,19 +54,29 @@ export function DegenSweeper() {
     const [tiles, setTiles] = useState(() => gen());
     const [points, setPoints] = useState(0);
     const [status, setStatus] = useState('playing');
+    const [undoLeft, setUndoLeft] = useState(1);
+    const [pendingBombKey, setPendingBombKey] = useState(null);
     const { reveal, boom, win } = useAudio();
     const safeLeft = useMemo(() => tiles.filter(t => !t.bomb && !t.revealed).length, [tiles]);
-    const reset = () => { setTiles(gen()); setPoints(0); setStatus('playing'); };
+    const reset = () => { setTiles(gen()); setPoints(0); setStatus('playing'); setUndoLeft(1); setPendingBombKey(null); };
     const onClick = (tile) => {
         if (status !== 'playing')
+            return;
+        if (pendingBombKey)
             return;
         if (tile.revealed)
             return;
         setTiles(prev => prev.map(t => (t.pos.row === tile.pos.row && t.pos.col === tile.pos.col ? { ...t, revealed: true } : t)));
         if (tile.bomb) {
-            setStatus('lost');
-            setPoints(0);
             boom();
+            const k = keyOf(tile.pos);
+            if (undoLeft > 0) {
+                setPendingBombKey(k);
+            }
+            else {
+                setStatus('lost');
+                setPoints(0);
+            }
             return;
         }
         reveal();
@@ -82,7 +92,21 @@ export function DegenSweeper() {
             });
         }, 0);
     };
-    return (_jsxs("div", { style: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }, children: [_jsx("div", { children: _jsx(Panel, { title: "Degen Sweeper", children: _jsxs("div", { style: { display: 'grid', gap: 8 }, children: [_jsxs("div", { children: ["Points: ", _jsx("strong", { children: points })] }), _jsxs("div", { children: ["Status: ", status === 'playing' ? 'Playing' : status === 'won' ? 'Cleared! +500' : 'Boom! 0 points'] }), _jsxs("div", { children: ["Safe tiles left: ", safeLeft] }), _jsx("button", { onClick: reset, style: { marginTop: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }, children: "New Round" })] }) }) }), _jsx("div", { children: _jsx(Panel, { title: "Grid", children: _jsx("div", { style: { display: 'grid', gridTemplateColumns: `repeat(${SIZE}, 54px)`, gridAutoRows: 54, gap: 4 }, children: tiles.map(t => (_jsxs("div", { onClick: () => onClick(t), style: {
+    const undoBomb = () => {
+        if (!pendingBombKey || undoLeft <= 0)
+            return;
+        setTiles(prev => prev.map(t => (keyOf(t.pos) === pendingBombKey ? { ...t, revealed: false } : t)));
+        setPendingBombKey(null);
+        setUndoLeft(n => n - 1);
+    };
+    const acceptLoss = () => {
+        if (!pendingBombKey)
+            return;
+        setPendingBombKey(null);
+        setStatus('lost');
+        setPoints(0);
+    };
+    return (_jsxs("div", { style: { display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20 }, children: [_jsx("div", { children: _jsx(Panel, { title: "Degen Sweeper", children: _jsxs("div", { style: { display: 'grid', gap: 8 }, children: [_jsxs("div", { children: ["Points: ", _jsx("strong", { children: points })] }), _jsxs("div", { children: ["Status: ", status === 'playing' ? 'Playing' : status === 'won' ? 'Cleared! +500' : 'Boom! 0 points'] }), _jsxs("div", { children: ["Safe tiles left: ", safeLeft] }), _jsxs("div", { children: ["Undo available: ", undoLeft] }), pendingBombKey && status === 'playing' && (_jsxs("div", { style: { display: 'flex', gap: 8 }, children: [_jsx("button", { onClick: undoBomb, disabled: undoLeft <= 0, style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: undoLeft > 0 ? 'transparent' : '#1a1f33', color: '#eaeaf0' }, children: "Undo Bomb" }), _jsx("button", { onClick: acceptLoss, style: { padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }, children: "Accept Loss" })] })), _jsx("button", { onClick: reset, style: { marginTop: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }, children: "New Round" })] }) }) }), _jsx("div", { children: _jsx(Panel, { title: "Grid", children: _jsx("div", { style: { display: 'grid', gridTemplateColumns: `repeat(${SIZE}, 54px)`, gridAutoRows: 54, gap: 4 }, children: tiles.map(t => (_jsxs("div", { onClick: () => onClick(t), style: {
                                 width: 54, height: 54, borderRadius: 8, border: '1px solid #2a2f45',
                                 background: t.revealed ? (t.bomb ? '#8b2b2b' : '#172039') : '#121525', display: 'grid', placeItems: 'center', cursor: 'pointer'
                             }, children: [t.revealed && !t.bomb && _jsx("span", { style: { color: '#9bb1ff', fontWeight: 700 }, children: "+10" }), t.revealed && t.bomb && _jsx("span", { style: { color: '#ff6b6b', fontWeight: 800 }, children: "X" })] }, keyOf(t.pos)))) }) }) })] }));

@@ -8,6 +8,7 @@ type BattleState = {
   lastRoll: { human: number | null; bot: number | null }
   stage: 'playing' | 'finished'
   winner: Player | null
+  heals: { human: number; bot: number }
 }
 
 function rollDie(): number { return 1 + Math.floor(Math.random() * 6) }
@@ -46,6 +47,7 @@ export function DiceShootout(): JSX.Element {
     lastRoll: { human: null, bot: null },
     stage: 'playing',
     winner: null,
+    heals: { human: 3, bot: 3 },
   })
   const { roll, hit, crit, win, lose } = useAudio()
 
@@ -64,13 +66,30 @@ export function DiceShootout(): JSX.Element {
     })
   }
 
-  const doHumanRoll = () => {
+  const doHumanRoll = (action: 'attack' | 'heal' = 'attack') => {
     if (state.stage !== 'playing' || state.turn !== 'human') return
     roll()
     const val = rollDie()
-    const dmg = val === 6 ? val * 2 : val
     setState(prev => ({ ...prev, lastRoll: { ...prev.lastRoll, human: val } }))
-    setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('human', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'bot' })) }, 150)
+    if (action === 'attack') {
+      const dmg = val === 6 ? 45 : val
+      setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('human', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'bot' })) }, 150)
+    } else {
+      // heal self, capped at 50, only if heals left
+      setTimeout(() => {
+        setState(prev => {
+          if (prev.heals.human <= 0) return prev
+          if (val === 2) {
+            // heal action grants opponent +20 (as per spec), but since heal already gives self val, we prioritize spec: enemy +20
+            const enemy = 'bot'
+            const hpEnemy = Math.min(50, prev.hp[enemy] + 20)
+            return { ...prev, hp: { ...prev.hp, [enemy]: hpEnemy } as any, heals: { ...prev.heals, human: prev.heals.human - 1 }, turn: 'bot' }
+          }
+          const healed = Math.min(50, prev.hp.human + val)
+          return { ...prev, hp: { ...prev.hp, human: healed }, heals: { ...prev.heals, human: prev.heals.human - 1 }, turn: 'bot' }
+        })
+      }, 150)
+    }
   }
 
   useEffect(() => {
@@ -79,9 +98,24 @@ export function DiceShootout(): JSX.Element {
     const timer = setTimeout(() => {
       roll()
       const val = rollDie()
-      const dmg = val === 6 ? val * 2 : val
+      // Simple bot policy: if hp <= 15 and heals left -> 60% heal else attack
+      const shouldHeal = state.heals.bot > 0 && state.hp.bot <= 15 && Math.random() < 0.6
       setState(prev => ({ ...prev, lastRoll: { ...prev.lastRoll, bot: val } }))
-      setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('bot', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'human' })) }, 150)
+      if (shouldHeal) {
+        setTimeout(() => {
+          setState(prev => {
+            if (val === 2) {
+              const hpEnemy = Math.min(50, prev.hp.human + 20)
+              return { ...prev, hp: { ...prev.hp, human: hpEnemy }, heals: { ...prev.heals, bot: prev.heals.bot - 1 }, turn: 'human' }
+            }
+            const healed = Math.min(50, prev.hp.bot + val)
+            return { ...prev, hp: { ...prev.hp, bot: healed }, heals: { ...prev.heals, bot: prev.heals.bot - 1 }, turn: 'human' }
+          })
+        }, 150)
+      } else {
+        const dmg = val === 6 ? 45 : val
+        setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('bot', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'human' })) }, 150)
+      }
     }, 650)
     return () => clearTimeout(timer)
   }, [state.turn, state.stage])
@@ -91,7 +125,7 @@ export function DiceShootout(): JSX.Element {
     state.winner === 'human' ? win() : lose()
   }, [state.stage])
 
-  const reset = () => setState({ hp: { human: 50, bot: 50 }, turn: 'human', lastRoll: { human: null, bot: null }, stage: 'playing', winner: null })
+  const reset = () => setState({ hp: { human: 50, bot: 50 }, turn: 'human', lastRoll: { human: null, bot: null }, stage: 'playing', winner: null, heals: { human: 3, bot: 3 } })
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20 }}>
@@ -100,7 +134,8 @@ export function DiceShootout(): JSX.Element {
           <div style={{ display: 'grid', gap: 8 }}>
             <div>{status}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button onClick={doHumanRoll} disabled={state.stage!=='playing' || state.turn!=='human'} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2d3550', background: state.turn==='human' && state.stage==='playing' ? 'transparent' : '#1a1f33', color: '#eaeaf0' }}>Roll</button>
+              <button onClick={() => doHumanRoll('attack')} disabled={state.stage!=='playing' || state.turn!=='human'} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2d3550', background: state.turn==='human' && state.stage==='playing' ? 'transparent' : '#1a1f33', color: '#eaeaf0' }}>Attack</button>
+              <button onClick={() => doHumanRoll('heal')} disabled={state.stage!=='playing' || state.turn!=='human' || state.heals.human<=0} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2d3550', background: state.turn==='human' && state.stage==='playing' && state.heals.human>0 ? 'transparent' : '#1a1f33', color: '#eaeaf0' }}>Heal ({state.heals.human} left)</button>
               <button onClick={reset} style={{ padding: '10px 14px', borderRadius: 10, border: '1px dashed #2d3550', background: 'transparent', color: '#9aa' }}>Reset</button>
             </div>
           </div>

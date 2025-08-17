@@ -13,7 +13,7 @@ type Phase = 'playing' | 'busted' | 'cashed'
 
 const SIZE = 8
 const BOMBS = 12
-const STAR_RATIO = 0.5 // proportion of non-bomb tiles that are stars; rest are cash
+// Ensure equal number of multipliers (stars) and bombs; rest become cash
 
 function keyOf(c: Cell): string { return `${c.row},${c.col}` }
 function inBounds(c: Cell): boolean { return c.row >= 0 && c.row < SIZE && c.col >= 0 && c.col < SIZE }
@@ -44,9 +44,9 @@ function generateBoard(): Tile[] {
     const j = Math.floor(Math.random() * (i + 1))
     const tmp = remaining[i]; remaining[i] = remaining[j]; remaining[j] = tmp
   }
-  const starCount = Math.floor(remaining.length * STAR_RATIO)
-  const stars = new Set(remaining.slice(0, starCount))
-  const cash = new Set(remaining.slice(starCount))
+  const starCount = BOMBS // equal to number of bombs
+  const stars = new Set(remaining.slice(0, Math.min(starCount, remaining.length)))
+  const cash = new Set(remaining.filter(k => !stars.has(k)))
   const tiles: Tile[] = []
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
