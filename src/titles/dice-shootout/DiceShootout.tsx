@@ -72,7 +72,7 @@ export function DiceShootout(): JSX.Element {
     const val = rollDie()
     setState(prev => ({ ...prev, lastRoll: { ...prev.lastRoll, human: val } }))
     if (action === 'attack') {
-      const dmg = val === 6 ? 45 : val
+      const dmg = val === 12 ? 10 : val
       setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('human', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'bot' })) }, 150)
     } else {
       // heal self, capped at 50, only if heals left
@@ -113,7 +113,7 @@ export function DiceShootout(): JSX.Element {
           })
         }, 150)
       } else {
-        const dmg = val === 6 ? 45 : val
+        const dmg = val === 12 ? 10 : val
         setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('bot', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'human' })) }, 150)
       }
     }, 650)
@@ -186,7 +186,7 @@ function Fighter({ name, hp, lastRoll, active }: { name: string; hp: number; las
     <div ref={ref} style={{ display: 'grid', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontWeight: 700 }}>{name}</div>
-        <div style={{ color: '#aab' }}>{lastRoll != null ? `Rolled: ${lastRoll}${lastRoll===6 ? ' (CRIT)' : ''}` : ''}</div>
+        <div style={{ color: '#aab' }}>{lastRoll != null ? `Rolled: ${lastRoll}` : ''}</div>
       </div>
       <div style={{ height: 14, background: '#1a1f33', borderRadius: 999, border: '1px solid #2a2f45', overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: pct>50 ? '#44d19a' : pct>20 ? '#f7c948' : '#ff6b6b', transition: 'width 220ms ease' }} />

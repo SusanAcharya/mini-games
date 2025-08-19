@@ -25,6 +25,7 @@ const games: Array<{ key: GameKey; title: string; ready: boolean; description: s
 
 export function App(): JSX.Element {
   const [active, setActive] = useState<GameKey | null>('hideout-hunt')
+  const [muted, setMuted] = useState<boolean>(true)
 
   const activeGameTitle = useMemo(() => games.find(g => g.key === active)?.title ?? 'GangstaVerse Parlor', [active])
 
@@ -58,6 +59,11 @@ export function App(): JSX.Element {
       <main style={{ padding: 24 }}>
         <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={{ margin: 0, fontSize: 28 }}>{activeGameTitle}</h1>
+          <button onClick={() => {
+            setMuted(m => !m)
+            const el = (window as any).NEON_NEXUS_AUDIO as HTMLAudioElement | undefined
+            if (el) el.muted = !el.muted
+          }} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2d3550', background: 'transparent', color: '#eaeaf0' }}>{muted ? 'Unmute Music' : 'Mute Music'}</button>
         </header>
         <section style={{ marginTop: 16, height: 'calc(100% - 56px)' }}>
           {active === 'dice-risk' && <DiceRisk />}

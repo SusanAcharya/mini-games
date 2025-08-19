@@ -62,7 +62,7 @@ export function DiceShootout() {
         const val = rollDie();
         setState(prev => ({ ...prev, lastRoll: { ...prev.lastRoll, human: val } }));
         if (action === 'attack') {
-            const dmg = val === 6 ? 45 : val;
+            const dmg = val === 12 ? 10 : val;
             setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('human', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'bot' })); }, 150);
         }
         else {
@@ -107,7 +107,7 @@ export function DiceShootout() {
                 }, 150);
             }
             else {
-                const dmg = val === 6 ? 45 : val;
+                const dmg = val === 12 ? 10 : val;
                 setTimeout(() => { (val === 6 ? crit() : hit()); applyDamage('bot', dmg); setState(p => ({ ...p, turn: p.winner ? p.turn : 'human' })); }, 150);
             }
         }, 650);
@@ -142,5 +142,5 @@ function Fighter({ name, hp, lastRoll, active }) {
         ], { duration: 240, easing: 'ease-in-out' });
     }, [lastRoll]);
     const pct = Math.max(0, Math.min(100, Math.round(hp / 50 * 100)));
-    return (_jsxs("div", { ref: ref, style: { display: 'grid', gap: 6 }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }, children: [_jsx("div", { style: { fontWeight: 700 }, children: name }), _jsx("div", { style: { color: '#aab' }, children: lastRoll != null ? `Rolled: ${lastRoll}${lastRoll === 6 ? ' (CRIT)' : ''}` : '' })] }), _jsx("div", { style: { height: 14, background: '#1a1f33', borderRadius: 999, border: '1px solid #2a2f45', overflow: 'hidden' }, children: _jsx("div", { style: { width: `${pct}%`, height: '100%', background: pct > 50 ? '#44d19a' : pct > 20 ? '#f7c948' : '#ff6b6b', transition: 'width 220ms ease' } }) }), _jsxs("div", { style: { color: '#eaeaf0' }, children: [hp, " HP"] }), active && _jsx("div", { style: { color: '#8aa1ff' }, children: "Your move\u2026" })] }));
+    return (_jsxs("div", { ref: ref, style: { display: 'grid', gap: 6 }, children: [_jsxs("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }, children: [_jsx("div", { style: { fontWeight: 700 }, children: name }), _jsx("div", { style: { color: '#aab' }, children: lastRoll != null ? `Rolled: ${lastRoll}` : '' })] }), _jsx("div", { style: { height: 14, background: '#1a1f33', borderRadius: 999, border: '1px solid #2a2f45', overflow: 'hidden' }, children: _jsx("div", { style: { width: `${pct}%`, height: '100%', background: pct > 50 ? '#44d19a' : pct > 20 ? '#f7c948' : '#ff6b6b', transition: 'width 220ms ease' } }) }), _jsxs("div", { style: { color: '#eaeaf0' }, children: [hp, " HP"] }), active && _jsx("div", { style: { color: '#8aa1ff' }, children: "Your move\u2026" })] }));
 }
