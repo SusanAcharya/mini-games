@@ -623,9 +623,9 @@ function PlayingCard({ card, faceDown, selectable, selected, onToggle, isGolden 
   useEffect(() => {
     if (!ref.current) return
     ref.current.animate([
-      { transform: 'translateY(-12px)', opacity: 0 },
-      { transform: 'translateY(0px)', opacity: 1 },
-    ], { duration: 220, easing: 'ease-out' })
+      { transform: 'rotateY(90deg)', opacity: 0 },
+      { transform: 'rotateY(0deg)', opacity: 1 },
+    ], { duration: 260, easing: 'ease-out' })
   }, [])
 
   const color = card.suit === '♥' || card.suit === '♦' ? '#ff7a7a' : '#eaeaf0'

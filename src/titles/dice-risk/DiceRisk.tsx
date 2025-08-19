@@ -134,9 +134,18 @@ export function DiceRisk(): JSX.Element {
         return { ...prev, human: { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'human' }
       }
       const humanNext: TurnState = { player: 'human', turnIndex: prev.human.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }
-      const botDone = isPlayerDone(prev.bot)
-      return { ...prev, human: humanNext, currentTurn: botDone ? 'human' : 'bot' }
+      return { ...prev, human: humanNext, currentTurn: 'human' }
     })
+    // If human reached 3 rolls, automatically play out bot turn
+    setTimeout(() => {
+      setRound(prev => {
+        if (prev.stage !== 'playing') return prev
+        if (prev.human.turnIndex >= 3 || prev.human.held) {
+          return { ...prev, currentTurn: 'bot' }
+        }
+        return prev
+      })
+    }, 20)
   }
 
   const doHumanHold = () => {
@@ -144,54 +153,56 @@ export function DiceRisk(): JSX.Element {
     confirm()
     setRound(prev => {
       const humanNext: TurnState = { ...prev.human, held: true, turnIndex: Math.max(prev.human.turnIndex, 1) }
-      const botDone = isPlayerDone(prev.bot)
-      // If bot still has turns, pass turn to bot, else it stays with human (round will end shortly)
-      return { ...prev, human: humanNext, currentTurn: botDone ? 'human' : 'bot' }
+      return { ...prev, human: humanNext, currentTurn: 'bot' }
     })
   }
 
-  // Bot acts on its turn. If human already held, bot can take consecutive actions until done.
+  // Bot turn runner: plays out entire bot turn once it's bot's turn (after human holds or reaches max turns)
   useEffect(() => {
     if (round.stage !== 'playing') return
     if (round.currentTurn !== 'bot') return
 
-    if (isRoundOver(round)) return
+    let cancelled = false
 
-    const timer = setTimeout(() => {
-      trigger(); roll()
+    const step = () => {
+      if (cancelled) return
       setRound(prev => {
         if (prev.stage !== 'playing' || prev.currentTurn !== 'bot') return prev
-        const botTurnNumber = Math.min(prev.bot.turnIndex + 1, 3)
-        const action = decideBotAction(prev.bot.rollSum, botTurnNumber)
-        let botNext: TurnState
-        if (action === 'hold') {
-          botNext = { ...prev.bot, held: true, turnIndex: Math.max(prev.bot.turnIndex, 1) }
-        } else {
-          const r = rollTwoDice()
-          if (r.sum === 12) {
-            return { ...prev, bot: { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'bot' }
-          }
-          botNext = { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }
+        // if bot already done, finalize
+        if (isPlayerDone(prev.bot)) {
+          const winner = resolveWinner(prev.human, prev.bot)
+          if (winner === 'human') win(); else if (winner === 'bot') lose(); else confirm()
+          return { ...prev, stage: 'finished', winner }
         }
-
-        const humanHeld = prev.human.held
-        const botDone = isPlayerDone(botNext)
-        // If human is held, keep bot's turn until bot is done; else pass back to human
-        const nextTurn: Player = humanHeld ? (botDone ? 'human' : 'bot') : 'human'
-        return { ...prev, bot: botNext, currentTurn: nextTurn }
+        trigger(); roll()
+        const action = decideBotAction(prev.bot.rollSum, Math.min(prev.bot.turnIndex + 1, 3))
+        if (action === 'hold') {
+          const botNext: TurnState = { ...prev.bot, held: true, turnIndex: Math.max(prev.bot.turnIndex, 1) }
+          return { ...prev, bot: botNext }
+        }
+        const r = rollTwoDice()
+        if (r.sum === 12) {
+          return { ...prev, bot: { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }, stage: 'finished', winner: 'bot' }
+        }
+        const botNext: TurnState = { player: 'bot', turnIndex: prev.bot.turnIndex + 1, rollSum: r.sum, held: false, dice: [r.dieA, r.dieB] }
+        return { ...prev, bot: botNext }
       })
-    }, 550)
-    return () => clearTimeout(timer)
+      setTimeout(step, 600)
+    }
+
+    // Start bot sequence
+    const t = setTimeout(step, 400)
+    return () => { cancelled = true; clearTimeout(t) }
   }, [round.currentTurn, round.stage])
 
-  // Check round completion and compute winner
+  // When human reaches max turns without holding, move to bot phase
   useEffect(() => {
     if (round.stage !== 'playing') return
-    if (!isRoundOver(round)) return
-    const winner = resolveWinner(round.human, round.bot)
-    if (winner === 'human') win(); else if (winner === 'bot') lose(); else confirm()
-    setRound(prev => ({ ...prev, stage: 'finished', winner }))
-  }, [round.human, round.bot, round.stage])
+    if (round.currentTurn !== 'human') return
+    if (round.human.turnIndex >= 3) {
+      setRound(prev => ({ ...prev, currentTurn: 'bot' }))
+    }
+  }, [round.human.turnIndex, round.currentTurn, round.stage])
 
   const reset = () => {
     setRound({
@@ -369,11 +380,10 @@ function DiceVisual({ value, dice, shakeKey }: { value: number; dice?: [number, 
     if (!ref.current) return
     const el = ref.current
     el.animate([
-      { transform: 'translateX(0px) rotate(0deg)' },
-      { transform: 'translateX(-4px) rotate(-3deg)' },
-      { transform: 'translateX(4px) rotate(3deg)' },
-      { transform: 'translateX(0px) rotate(0deg)' },
-    ], { duration: 280, easing: 'ease-in-out' })
+      { transform: 'translateZ(0) rotate(0deg) scale(1)' },
+      { transform: 'translateZ(10px) rotate(15deg) scale(1.05)' },
+      { transform: 'translateZ(0) rotate(0deg) scale(1)' },
+    ], { duration: 360, easing: 'ease-in-out' })
   }, [shakeKey])
 
   const approxA = dice ? dice[0] : Math.max(1, Math.min(6, Math.floor((value || 1) / 2)))
